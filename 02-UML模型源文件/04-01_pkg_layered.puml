@@ -1,0 +1,112 @@
+' 文件：04-01_pkg_layered.puml
+' 图号：图 4-1  系统分层包图
+' 章节：4.2 系统逻辑架构
+' 说明：给出后端代码的分层包结构及各层之间的依赖方向，体现依赖倒置原则。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-1  系统分层包图
+left to right direction
+
+package "com.aiecp" {
+
+  package "presentation 表现层" as PKG_P {
+    package "mall" {
+      class 商城端控制器
+    }
+    package "merchant" {
+      class 商家端控制器
+    }
+    package "console" {
+      class 运营端控制器
+    }
+  }
+
+  package "application 应用层" as PKG_A {
+    class 品类应用服务
+    class 商品应用服务
+    class 订单应用服务
+    class "AI 应用服务"
+  }
+
+  package "domain 领域层" as PKG_D {
+    class 品类聚合
+    class 商品聚合
+    class 订单聚合
+    class 推荐领域服务
+    class 组货领域服务
+  }
+
+  package "ai 智能能力层" as PKG_AI {
+    class "LLM 网关适配"
+    class 向量检索
+    class 提示词模板
+    class "AI 策略集"
+  }
+
+  package "infrastructure 基础设施层" as PKG_I {
+    class 持久化适配器
+    class 缓存适配器
+    class 消息适配器
+    class 外部接口适配器
+  }
+}
+
+package "common 公共层" as PKG_C {
+  class 统一响应封装
+  class 全局异常体系
+  class 通用工具类
+}
+
+PKG_P ..> PKG_A : 调用
+PKG_A ..> PKG_D : 调用
+PKG_A ..> PKG_AI : 调用
+PKG_D ..> PKG_C : 依赖
+PKG_AI ..> PKG_C : 依赖
+PKG_I ..> PKG_C : 依赖
+PKG_D <.. PKG_I : 实现(依赖倒置)
+@enduml

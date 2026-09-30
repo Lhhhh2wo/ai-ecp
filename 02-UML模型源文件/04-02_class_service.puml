@@ -1,0 +1,183 @@
+' 文件：04-02_class_service.puml
+' 图号：图 4-2  核心服务设计类图
+' 章节：4.3 静态结构设计
+' 说明：给出分层架构下核心类、接口及其依赖关系，并说明所采用的设计模式。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-2  核心服务设计类图
+left to right direction
+
+package "controller 控制层" {
+  class CategoryController <<控制类>> {
+    +importCategory(json : String) : Result
+    +publishCategory(categoryId : Long) : Result
+    +previewForm(categoryId : Long) : Result
+  }
+  class ProductController <<控制类>> {
+    +publishProduct(dto : ProductDTO) : Result
+    +queryProduct(productId : Long) : Result
+  }
+  class AiController <<控制类>> {
+    +chat(req : ChatRequest) : SseEmitter
+    +recommend(req : RecommendRequest) : Result
+    +composeBundle(req : BundleRequest) : Result
+  }
+}
+
+package "application 应用服务层" {
+  class CategoryApplicationService <<服务类>> {
+    -parser : JsonCategoryParser
+    -validator : CategorySchemaValidator
+    -treeBuilder : CategoryTreeBuilder
+    +importCategory(json : String, merchantId : Long) : CategoryVO
+    +buildDynamicForm(categoryId : Long) : FormSchema
+  }
+  class ProductApplicationService <<服务类>> {
+    +publishProduct(dto : ProductDTO) : Long
+    +searchProducts(query : ProductQuery) : Page
+  }
+  class AiApplicationService <<服务类>> {
+    -factory : AiCapabilityFactory
+    +dispatch(scene : String, ctx : AiContext) : AiResult
+  }
+}
+
+package "domain 领域层" {
+  class JsonCategoryParser <<领域服务>> {
+    +parse(json : String) : CategoryDraft
+    +locateSyntaxError(json : String) : ErrorPointer
+  }
+  class CategorySchemaValidator <<领域服务>> {
+    +validate(draft : CategoryDraft) : ValidationResult
+  }
+  class CategoryTreeBuilder <<领域服务>> {
+    +buildTree(draft : CategoryDraft) : CategoryTree
+    +extractAttrSchema(tree : CategoryTree) : List
+  }
+  class IndexMappingGenerator <<领域服务>> {
+    +generate(tree : CategoryTree) : IndexMapping
+  }
+  class DynamicFormGenerator <<领域服务>> {
+    +generate(schema : List) : FormSchema
+  }
+  class 品类 <<实体>> {
+    -categoryId : Long
+    -code : String
+    -parentId : Long
+    -level : int
+    +isLeaf() : boolean
+    +fullPath() : String
+  }
+  class 品类属性 <<实体>> {
+    -attrCode : String
+    -dataType : String
+    -required : boolean
+    -filterable : boolean
+  }
+}
+
+package "ai 智能能力层" {
+  class AiCapabilityFactory <<工厂类>> {
+    +getCapability(scene : String) : AiCapability
+  }
+  class AiCapability <<abstract>> {
+    #llmGateway : ILlmGateway
+    #retriever : IVectorRetriever
+    +execute(ctx : AiContext) : AiResult
+    +{abstract} buildPrompt(ctx : AiContext) : Prompt
+  }
+  class CustomerServiceCapability <<策略类>>
+  class ProductSelectionCapability <<策略类>>
+  class BundleCompositionCapability <<策略类>>
+  class ILlmGateway <<接口>> {
+    +chat(prompt : Prompt) : Completion
+    +stream(prompt : Prompt) : Flux
+  }
+  class IVectorRetriever <<接口>> {
+    +retrieve(query : String, topK : int) : List
+  }
+}
+
+package "repository 仓储层" {
+  class CategoryRepository <<接口>> {
+    +save(tree : CategoryTree) : Long
+    +findByCode(code : String) : Category
+    +findTree(rootId : Long) : List
+  }
+  class CategoryRepositoryImpl <<实现类>>
+  class ConversationRepository <<接口>>
+  class ProductRepository <<接口>>
+}
+
+CategoryController ..> CategoryApplicationService
+ProductController ..> ProductApplicationService
+AiController ..> AiApplicationService
+
+CategoryApplicationService ..> JsonCategoryParser
+CategoryApplicationService ..> CategorySchemaValidator
+CategoryApplicationService ..> CategoryTreeBuilder
+CategoryApplicationService ..> DynamicFormGenerator
+CategoryTreeBuilder ..> IndexMappingGenerator
+CategoryApplicationService ..> CategoryRepository
+
+AiApplicationService ..> AiCapabilityFactory
+AiCapabilityFactory ..> AiCapability : 创建
+CustomerServiceCapability --|> AiCapability
+ProductSelectionCapability --|> AiCapability
+BundleCompositionCapability --|> AiCapability
+AiCapability o-- ILlmGateway : 依赖注入
+AiCapability o-- IVectorRetriever : 依赖注入
+
+CategoryRepositoryImpl ..|> CategoryRepository
+CategoryApplicationService ..> ConversationRepository
+ProductApplicationService ..> ProductRepository
+
+品类 "1" o-- "*" 品类属性
+CategoryTreeBuilder ..> 品类 : 构建
+CategoryRepository ..> 品类 : 持久化
+@enduml

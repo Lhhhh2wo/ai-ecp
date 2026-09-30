@@ -1,0 +1,100 @@
+' 文件：04-13_seq_grouping.puml
+' 图号：图 4-13  智能组货搭配时序图
+' 章节：4.5 动态行为设计
+' 说明：描述以主商品为中心的智能组货：场景识别、配套召回、可行性校验、组合定价与一键加购。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-13  智能组货搭配时序图
+
+actor "消费者" as U
+participant "商品详情页" as FE
+participant "智能组货服务" as GS
+participant "场景意图识别" as SI
+participant "关联规则引擎" as AR
+participant "大模型网关" as LLM
+participant "库存服务" as IS
+participant "促销定价服务" as PR
+participant "购物车服务" as CART
+
+U -> FE : 点击「一键搭购」
+FE -> GS : compose(mainSkuId, userId, scene)
+activate GS
+
+GS -> SI : detectScene(userId, mainSkuId, browseTrace)
+SI --> GS : 场景标签(如「露营新手装备」)与约束
+
+GS -> AR : findAssociations(mainSkuId, sceneTag)
+activate AR
+AR --> GS : 候选配套 SKU 列表
+deactivate AR
+
+GS -> LLM : generateReason(候选配套 SKU, 场景标签)
+LLM --> GS : 搭配理由与文案
+
+GS -> IS : checkAvailability(skuList)
+IS --> GS : 可售库存与替代品建议
+
+GS -> PR : calcBundlePrice(skuList)
+PR --> GS : 组合价 / 优惠明细 / 预估毛利率
+
+GS -> GS : 组合毛利与合规性校验 + 方案加权排序
+
+alt 存在可用组合方案
+  GS --> FE : 主推方案 + 备选方案
+  FE --> U : 展示搭配图与组合优惠
+  U -> FE : 一键加购组合
+  FE -> CART : addBundle(bundleId)
+  CART --> FE : 加购成功
+else 无可用组合方案
+  GS --> FE : 降级为同类单品推荐
+  FE --> U : 展示替代单品
+end
+
+GS -> GS : 记录组货曝光与转化埋点
+deactivate GS
+@enduml

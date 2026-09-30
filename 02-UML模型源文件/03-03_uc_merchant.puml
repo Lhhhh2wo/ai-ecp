@@ -1,0 +1,82 @@
+' 文件：03-03_uc_merchant.puml
+' 图号：图 3-3  商家与平台管理员用例图
+' 章节：3.2 系统用例分析
+' 说明：细化供给侧与治理侧的用例，突出「JSON 自定义品类」这一系统特色能力。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+left to right direction
+title 图 3-3  商家与平台管理员用例图
+
+actor "商家 / 运营人员" as ACT_MER
+actor "平台管理员" as ACT_ADM
+actor "大模型服务" as ACT_LLM <<外部系统>>
+
+rectangle "智选云 AI 电商在线售货系统" {
+  usecase "自定义商品品类(JSON)" as MC1
+  usecase "品类解析与结构校验" as MC2
+  usecase "商品与库存管理" as MC3
+  usecase "营销活动配置" as MC4
+  usecase "经营与推荐数据看板" as MC5
+  usecase "用户与权限管理" as AD1
+  usecase "AI 模型与知识库配置" as AD2
+  usecase "推荐与组货策略配置" as AD3
+}
+
+ACT_MER --> MC1
+ACT_MER --> MC3
+ACT_MER --> MC4
+ACT_MER --> MC5
+ACT_ADM --> AD1
+ACT_ADM --> AD2
+ACT_ADM --> AD3
+
+MC1 ..> MC2 : <<include>>
+MC1 ..> MC3 : <<extend>>
+AD2 ..> ACT_LLM
+AD3 ..> MC3 : <<extend>>
+@enduml

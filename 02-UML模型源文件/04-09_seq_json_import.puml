@@ -1,0 +1,111 @@
+' 文件：04-09_seq_json_import.puml
+' 图号：图 4-9  自定义品类 JSON 解析与入库时序图
+' 章节：4.5 动态行为设计
+' 说明：细化商家自定义品类 JSON 的解析、校验、树构建、索引映射生成与落库交互过程。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-9  自定义品类 JSON 解析与入库时序图
+
+actor "商家 / 运营人员" as MER
+participant "商家管理后台" as UI
+participant "品类管理服务" as CS
+participant "JSON 解析器" as JP
+participant "Schema 校验器" as SV
+participant "品类树构建器" as TB
+participant "索引映射生成器" as IM
+participant "品类仓储" as REPO
+database "MySQL" as DB
+
+MER -> UI : 粘贴 / 上传品类定义 JSON
+UI -> CS : importCategory(jsonText, merchantId)
+activate CS
+
+CS -> JP : parse(jsonText)
+activate JP
+JP -> JP : JSON 语法解析与字段提取
+JP --> CS : CategoryDraft 或 SyntaxError
+deactivate JP
+
+alt 存在 JSON 语法错误
+  CS --> UI : 400 + 错误定位(行号 / 字段路径)
+  UI --> MER : 高亮标注错误位置
+else 语法合法
+  CS -> SV : validate(CategoryDraft)
+  activate SV
+  SV -> SV : 编码唯一性 / 层级深度 / 类型白名单 / 循环引用校验
+  SV --> CS : ValidationResult
+  deactivate SV
+
+  alt 校验不通过
+    CS --> UI : 422 + 校验错误清单
+    UI --> MER : 展示逐条修正建议
+  else 校验通过
+    CS -> TB : buildTree(CategoryDraft)
+    activate TB
+    TB --> CS : CategoryTree(含属性 Schema)
+    deactivate TB
+
+    CS -> IM : generateMapping(CategoryTree)
+    activate IM
+    IM --> CS : 检索与筛选索引映射
+    deactivate IM
+
+    CS -> REPO : saveTree(CategoryTree, version)
+    activate REPO
+    REPO -> DB : 事务写入品类 / 属性 / 索引映射
+    DB --> REPO : 影响行数
+    REPO --> CS : categoryId, version
+    deactivate REPO
+
+    CS --> UI : 201 导入成功
+    UI --> MER : 预览自动生成的商品发布表单
+  end
+end
+
+deactivate CS
+@enduml

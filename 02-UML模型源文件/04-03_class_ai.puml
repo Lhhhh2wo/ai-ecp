@@ -1,0 +1,188 @@
+' 文件：04-03_class_ai.puml
+' 图号：图 4-3  AI 能力引擎类图
+' 章节：4.3 静态结构设计
+' 说明：细化 AI 能力中台的类结构：能力抽象、策略实现、模型适配、检索增强、工具调用与安全护栏。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-3  AI 能力引擎类图
+left to right direction
+
+package "能力抽象与策略" {
+  class AiCapability <<abstract>> {
+    #llmGateway : ILlmGateway
+    #retriever : IVectorRetriever
+    #toolRegistry : ToolRegistry
+    #guardrail : GuardrailFilter
+    +execute(ctx : AiContext) : AiResult
+    +{abstract} buildPrompt(ctx : AiContext) : Prompt
+    +{abstract} postProcess(raw : String) : AiResult
+  }
+  class CustomerServiceCapability {
+    -memory : ConversationMemory
+    +buildPrompt(ctx : AiContext) : Prompt
+    +postProcess(raw : String) : AiResult
+  }
+  class ProductSelectionCapability {
+    -ranker : RankingModelClient
+    +buildPrompt(ctx : AiContext) : Prompt
+    +postProcess(raw : String) : AiResult
+  }
+  class BundleCompositionCapability {
+    -ruleEngine : AssociationRuleEngine
+    +buildPrompt(ctx : AiContext) : Prompt
+    +postProcess(raw : String) : AiResult
+  }
+  class AiCapabilityFactory <<工厂类>> {
+    -strategies : Map
+    +register(scene : String, cap : AiCapability)
+    +getCapability(scene : String) : AiCapability
+  }
+}
+
+package "模型适配" {
+  class ILlmGateway <<接口>> {
+    +chat(prompt : Prompt) : Completion
+    +stream(prompt : Prompt) : Flux
+    +embedding(texts : List) : List
+  }
+  class QwenLlmAdapter <<适配器>>
+  class DeepSeekLlmAdapter <<适配器>>
+  class CloudApiLlmAdapter <<适配器>>
+  class LlmRouter <<路由类>> {
+    +route(request : LlmRequest) : ILlmGateway
+    +fallback(request : LlmRequest) : ILlmGateway
+  }
+}
+
+package "检索增强与工具" {
+  class IVectorRetriever <<接口>> {
+    +retrieve(query : String, topK : int) : List
+  }
+  class VectorRetrieverImpl <<实现类>>
+  class Reranker {
+    +rerank(candidates : List, query : String) : List
+  }
+  class PromptTemplateManager {
+    +render(code : String, vars : Map) : Prompt
+    +versionOf(code : String) : String
+  }
+  class ToolRegistry {
+    +register(tool : AiTool)
+    +invoke(name : String, args : Map) : ToolResult
+  }
+  class AiTool <<接口>> {
+    +name() : String
+    +schema() : JsonSchema
+    +invoke(args : Map) : ToolResult
+  }
+  class OrderQueryTool <<工具>>
+  class LogisticsQueryTool <<工具>>
+  class InventoryQueryTool <<工具>>
+  class RankingModelClient <<客户端>> {
+    +rank(candidates : List, features : Map) : List
+  }
+  class AssociationRuleEngine <<领域服务>> {
+    +rulesOf(mainSkuId : Long, scene : String) : List
+    +support(itemset : Set) : double
+  }
+}
+
+package "会话、安全与可观测" {
+  class ConversationMemory {
+    +load(sessionId : String) : List
+    +append(sessionId : String, turn : Turn)
+    +summarize(sessionId : String) : String
+  }
+  class GuardrailFilter {
+    +checkInput(text : String) : GuardResult
+    +checkOutput(text : String) : GuardResult
+  }
+  class AiCallLogger {
+    +log(call : AiCallRecord)
+  }
+  class TokenCostMeter {
+    +accumulate(usage : TokenUsage)
+  }
+}
+
+AiCapabilityFactory ..> AiCapability : 管理
+CustomerServiceCapability --|> AiCapability
+ProductSelectionCapability --|> AiCapability
+BundleCompositionCapability --|> AiCapability
+
+AiCapability o-- ILlmGateway
+AiCapability o-- IVectorRetriever
+AiCapability o-- ToolRegistry
+AiCapability o-- GuardrailFilter
+
+LlmRouter ..|> ILlmGateway
+QwenLlmAdapter ..|> ILlmGateway
+DeepSeekLlmAdapter ..|> ILlmGateway
+CloudApiLlmAdapter ..|> ILlmGateway
+LlmRouter o-- QwenLlmAdapter
+LlmRouter o-- DeepSeekLlmAdapter
+LlmRouter o-- CloudApiLlmAdapter
+
+VectorRetrieverImpl ..|> IVectorRetriever
+VectorRetrieverImpl ..> Reranker : 调用重排
+
+ToolRegistry o-- AiTool
+OrderQueryTool ..|> AiTool
+LogisticsQueryTool ..|> AiTool
+InventoryQueryTool ..|> AiTool
+
+CustomerServiceCapability ..> ConversationMemory : 读写上下文
+CustomerServiceCapability ..> PromptTemplateManager : 渲染提示词
+ProductSelectionCapability ..> PromptTemplateManager
+BundleCompositionCapability ..> PromptTemplateManager
+ProductSelectionCapability ..> RankingModelClient : 精排打分
+
+AiCapability ..> AiCallLogger
+AiCapability ..> TokenCostMeter
+BundleCompositionCapability ..> AssociationRuleEngine
+@enduml

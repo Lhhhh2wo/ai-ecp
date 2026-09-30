@@ -1,0 +1,139 @@
+' 文件：04-04_comp_overall.puml
+' 图号：图 4-4  系统组件图
+' 章节：4.4 组件与部署设计
+' 说明：给出系统在物理实现视角下的组件划分与依赖关系。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-4  系统组件图
+left to right direction
+
+package "客户端层" {
+  component "消费者商城(Web/H5/小程序)" as C_MALL
+  component "商家管理后台" as C_MER
+  component "运营数据看板" as C_OPS
+}
+
+package "接入层" {
+  component "API 网关" as G_GW
+  component "统一鉴权" as G_AUTH
+  component "限流熔断" as G_LIMIT
+}
+
+package "应用服务层" {
+  component "品类管理服务" as S_CAT
+  component "商品与库存服务" as S_PROD
+  component "订单与支付服务" as S_ORDER
+  component "用户与会员服务" as S_USER
+  component "营销促销服务" as S_MKT
+}
+
+package "AI 能力中台" {
+  component "智能客服服务" as A_CS
+  component "智能选品服务" as A_PS
+  component "智能组货服务" as A_PG
+  component "大模型网关" as A_LLM
+  component "向量检索服务" as A_VEC
+}
+
+package "数据层" {
+  database "MySQL 业务主库" as D_MYSQL
+  database "Redis 缓存与会话" as D_REDIS
+  database "向量数据库" as D_VDB
+  database "Elasticsearch 检索" as D_ES
+  database "对象存储" as D_OSS
+  database "Kafka 消息队列" as D_MQ
+}
+
+package "外部系统" {
+  component "支付网关" as E_PAY
+  component "物流开放平台" as E_LOG
+  component "短信与推送" as E_MSG
+}
+
+C_MALL --> G_GW
+C_MER --> G_GW
+C_OPS --> G_GW
+
+G_GW --> G_AUTH
+G_GW --> G_LIMIT
+
+G_GW --> S_CAT
+G_GW --> S_PROD
+G_GW --> S_ORDER
+G_GW --> S_USER
+G_GW --> S_MKT
+G_GW --> A_CS
+G_GW --> A_PS
+G_GW --> A_PG
+
+S_CAT --> D_MYSQL
+S_CAT --> D_ES
+S_PROD --> D_MYSQL
+S_PROD --> D_REDIS
+S_PROD --> D_ES
+S_ORDER --> D_MYSQL
+S_ORDER --> D_MQ
+S_USER --> D_MYSQL
+S_MKT --> D_MYSQL
+S_MKT --> D_REDIS
+
+A_CS --> A_LLM
+A_PS --> A_LLM
+A_PG --> A_LLM
+A_CS --> A_VEC
+A_PS --> A_VEC
+A_PS --> D_REDIS
+A_CS --> D_REDIS
+A_PG --> S_PROD
+
+S_USER --> D_OSS
+S_PROD --> D_OSS
+S_ORDER --> E_PAY
+S_ORDER --> E_LOG
+S_USER --> E_MSG
+@enduml

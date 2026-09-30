@@ -1,0 +1,104 @@
+' 文件：04-05_comp_ai.puml
+' 图号：图 4-5  AI 能力中台组件与接口图
+' 章节：4.4 组件与部署设计
+' 说明：以「供给接口 / 需求接口」方式刻画 AI 能力中台内部组件契约，体现低耦合、可替换的设计目标。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-5  AI 能力中台组件与接口图
+left to right direction
+
+package "AI 能力中台" {
+  component "智能客服服务" as CS
+  component "智能选品服务" as PS
+  component "智能组货服务" as PG
+  component "大模型网关" as GW
+  component "向量检索服务" as VEC
+  component "提示词与模板管理" as TPL
+  component "AI 调用审计" as AUD
+  component "安全护栏" as GRD
+}
+
+interface "IAiCapability" as I_CAP
+interface "ILlmGateway" as I_LLM
+interface "IVectorSearch" as I_VEC
+interface "IProfileService" as I_PROF
+interface "IProductQuery" as I_PROD
+interface "IRuleEngine" as I_RULE
+interface "IAuditLog" as I_AUD
+
+CS --() I_CAP
+PS --() I_CAP
+PG --() I_CAP
+
+GW --() I_LLM
+VEC --() I_VEC
+AUD --() I_AUD
+
+CS --( I_LLM
+PS --( I_LLM
+PG --( I_LLM
+
+CS --( I_VEC
+PS --( I_VEC
+PG --( I_RULE
+
+PS --( I_PROF
+PS --( I_PROD
+PG --( I_PROD
+
+CS ..> TPL : 渲染提示词
+PS ..> TPL
+PG ..> TPL
+
+CS ..> GRD : 输入输出合规校验
+PS ..> GRD
+PG ..> GRD
+
+CS ..> AUD
+GW ..> AUD
+@enduml

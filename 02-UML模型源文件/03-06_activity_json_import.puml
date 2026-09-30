@@ -1,0 +1,111 @@
+' 文件：03-06_activity_json_import.puml
+' 图号：图 3-6  JSON 品类定义导入与解析活动图
+' 章节：3.4 关键业务流程分析
+' 说明：描述商家自定义品类 JSON 从提交到落地为可运营品类结构、动态表单与索引映射的完整处理流程。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 3-6  JSON 品类定义导入与解析活动图
+
+start
+
+partition "商家 / 运营人员" {
+  :编写或上传品类定义 JSON;
+  :在管理后台提交导入;
+}
+
+partition "品类管理服务" {
+  :接收 JSON 文本与商家标识;
+
+  if (JSON 语法是否合法?) then (否)
+    :定位语法错误(行号 / 字段路径);
+    :返回 400 与错误详情;
+    stop
+  else (是)
+    :反序列化为品类草稿对象;
+  endif
+
+  :执行结构语义校验;
+  note right
+    校验规则：
+    1. 品类编码全局唯一
+    2. 层级深度不超过 5 层
+    3. 属性编码同品类内唯一
+    4. 数据类型属于白名单
+    5. 不存在循环引用
+  end note
+
+  if (校验是否通过?) then (否)
+    :生成逐条校验错误清单;
+    :返回 422 与修正建议;
+    stop
+  else (是)
+    :构建品类树;
+    :抽取属性 Schema(必填/可筛选/取值范围);
+  endif
+}
+
+partition "衍生能力生成" {
+  :生成动态商品发布表单模板;
+  :生成检索与筛选索引映射;
+  :生成 AI 提示词中的品类上下文片段;
+}
+
+partition "数据持久化" {
+  :开启事务;
+  :写入品类、属性与索引映射;
+  :登记品类版本号;
+  :提交事务;
+}
+
+partition "商家 / 运营人员" {
+  :预览动态表单并试发布商品;
+  :确认发布品类版本;
+}
+
+stop
+@enduml

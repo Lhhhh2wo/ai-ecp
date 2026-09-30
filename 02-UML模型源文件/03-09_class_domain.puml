@@ -1,0 +1,253 @@
+' 文件：03-09_class_domain.puml
+' 图号：图 3-9  领域概念类图
+' 章节：3.5 领域模型分析
+' 说明：从业务视角抽象系统核心领域概念及其静态关系，为后续详细设计提供依据。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 3-9  领域概念类图
+
+package "用户与商家" {
+  class 用户 {
+    +userId : Long
+    +nickname : String
+    +mobile : String
+    +memberLevel : int
+    +login()
+    +buildProfile()
+  }
+  class 用户画像 {
+    +profileId : Long
+    +preferredCategories : List
+    +priceBand : String
+    +activityScore : double
+    +updateByBehavior()
+  }
+  class 商家 {
+    +merchantId : Long
+    +shopName : String
+    +qualificationStatus : int
+    +publishProduct()
+  }
+}
+
+package "品类体系（JSON 自定义）" {
+  class 品类 {
+    +categoryId : Long
+    +code : String
+    +name : String
+    +level : int
+    +path : String
+    +version : int
+    +parseJson()
+    +validate()
+    +toTree()
+  }
+  class 品类属性 {
+    +attrId : Long
+    +attrCode : String
+    +attrName : String
+    +dataType : String
+    +required : boolean
+    +filterable : boolean
+    +valueRange : String
+    +buildFormField()
+  }
+}
+
+package "商品与库存" {
+  class 商品 {
+    +productId : Long
+    +title : String
+    +mainImage : String
+    +status : int
+    +publish()
+  }
+  class SKU {
+    +skuId : Long
+    +specText : String
+    +salePrice : Decimal
+    +available()
+  }
+  class 属性值 {
+    +valueId : Long
+    +attrValue : String
+  }
+  class 库存 {
+    +stockId : Long
+    +warehouseId : Long
+    +totalQty : int
+    +lockedQty : int
+    +lock()
+    +deduct()
+  }
+}
+
+package "交易" {
+  class 购物车 {
+    +cartId : Long
+    +addItem()
+    +addBundle()
+  }
+  class 购物车项 {
+    +itemId : Long
+    +quantity : int
+    +source : String
+  }
+  class 订单 {
+    +orderId : Long
+    +totalAmount : Decimal
+    +payAmount : Decimal
+    +status : int
+    +submit()
+    +cancel()
+    +confirmReceipt()
+  }
+  class 订单项 {
+    +orderItemId : Long
+    +quantity : int
+    +unitPrice : Decimal
+  }
+  class 支付单 {
+    +paymentId : Long
+    +channel : String
+    +payStatus : int
+    +pay()
+    +refund()
+  }
+  class 物流单 {
+    +shipmentId : Long
+    +carrier : String
+    +trackingNo : String
+    +trace()
+  }
+}
+
+package "AI 能力" {
+  class 会话 {
+    +sessionId : String
+    +channel : String
+    +startTime : DateTime
+    +appendTurn()
+  }
+  class 消息 {
+    +messageId : Long
+    +role : String
+    +content : String
+    +confidence : double
+  }
+  class 知识条目 {
+    +chunkId : Long
+    +categoryCode : String
+    +content : String
+    +embedding : Vector
+    +match()
+  }
+  class 行为事件 {
+    +eventId : Long
+    +eventType : String
+    +skuId : Long
+    +occurTime : DateTime
+  }
+  class 推荐任务 {
+    +taskId : Long
+    +scene : String
+    +strategyCode : String
+    +execute()
+  }
+  class 推荐项 {
+    +itemId : Long
+    +rankScore : double
+    +reason : String
+  }
+  class 组货方案 {
+    +bundleId : Long
+    +sceneTag : String
+    +bundlePrice : Decimal
+    +grossRate : double
+    +compose()
+  }
+  class 组货项 {
+    +bundleItemId : Long
+    +role : String
+    +quantity : int
+  }
+}
+
+用户 "1" -- "1" 用户画像 : 拥有
+用户 "1" -- "0..1" 购物车 : 持有
+用户 "1" -- "*" 订单 : 提交
+用户 "1" -- "*" 会话 : 发起
+用户 "1" -- "*" 行为事件 : 产生
+用户画像 "1" -- "*" 行为事件 : 由行为更新
+
+商家 "1" o-- "*" 商品 : 经营
+商家 "1" o-- "*" 品类 : 自定义
+
+品类 "1" o-- "*" 品类 : 父子层级
+品类 "1" *-- "1..*" 品类属性 : 定义属性 Schema
+商品 "*" -- "1" 品类 : 归属
+商品 "1" *-- "1..*" SKU : 包含
+SKU "1" -- "*" 属性值 : 具备
+SKU "1" -- "1" 库存 : 对应
+
+购物车 "1" *-- "1..*" 购物车项 : 包含
+购物车项 "*" -- "1" SKU : 指向
+
+订单 "1" *-- "1..*" 订单项 : 包含
+订单 "1" -- "1" 支付单 : 关联
+订单 "1" -- "0..1" 物流单 : 关联
+订单项 "*" -- "1" SKU : 下单对象
+
+会话 "1" *-- "1..*" 消息 : 包含
+消息 "*" ..> "*" 知识条目 : RAG 引用
+推荐任务 "1" *-- "*" 推荐项 : 产出
+推荐项 "*" -- "1" 商品 : 推荐对象
+组货方案 "1" *-- "2..*" 组货项 : 包含
+组货项 "*" -- "1" SKU : 组货对象
+组货方案 "*" -- "1" 商品 : 以主商品为中心
+@enduml

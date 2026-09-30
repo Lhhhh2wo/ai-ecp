@@ -1,0 +1,94 @@
+' 文件：03-05_func_tree.puml
+' 图号：图 3-5  系统功能结构图
+' 章节：3.3 功能需求
+' 说明：以工作分解结构形式给出系统的完整功能树，作为功能需求清单的索引。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startwbs
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 3-5  系统功能结构图
+
+* 智选云 AI 电商在线售货系统
+** 商城交易子系统
+*** 商品浏览与检索
+*** 商品详情与规格选择
+*** 购物车管理
+*** 下单与支付
+*** 订单与物流跟踪
+*** 售后与评价
+** 智能客服子系统
+*** 多轮对话会话管理
+*** 意图识别与情绪识别
+*** 知识库检索增强问答
+*** 业务工具调用（订单/物流/退换）
+*** 人工客服转接与工单
+** 智能选品子系统
+*** 用户画像与兴趣建模
+*** 多路召回与个性化排序
+*** 场景化推荐位管理
+*** 推荐效果埋点与回流
+*** 推荐策略 A/B 实验
+** 智能组货子系统
+*** 搭配场景识别
+*** 关联规则与知识图谱挖掘
+*** 组合优惠与毛利测算
+*** 库存与履约可行性校验
+*** 一键加购与组合下单
+** 品类与商品管理子系统
+*** JSON 品类定义导入
+*** 品类结构解析与校验
+*** 属性 Schema 与动态表单生成
+*** 商品 SPU / SKU 管理
+*** 库存与价格管理
+*** 检索索引映射生成
+** 运营与治理子系统
+*** 营销活动与优惠券
+*** 运营数据看板
+*** 用户与权限管理
+*** AI 模型与提示词配置
+*** 知识库与语料管理
+*** 系统日志与审计
+@endwbs

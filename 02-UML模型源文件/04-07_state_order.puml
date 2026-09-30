@@ -1,0 +1,85 @@
+' 文件：04-07_state_order.puml
+' 图号：图 4-7  订单状态图
+' 章节：4.5 动态行为设计
+' 说明：描述订单对象从创建到终态的完整生命周期，明确状态迁移事件与守卫条件。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-7  订单状态图
+
+[*] --> 待支付 : 创建订单成功 / 锁定库存
+
+待支付 --> 已支付 : 支付成功回调 [验签通过 且 幂等校验通过]
+待支付 --> 已关闭 : 用户取消
+待支付 --> 已关闭 : 超时未支付 (定时任务)
+
+已支付 --> 待发货 : 商家确认发货 / 自动审核通过
+已支付 --> 退款中 : 用户申请退款
+
+待发货 --> 已发货 : 出库并录入运单号
+待发货 --> 退款中 : 发货前取消
+
+已发货 --> 已完成 : 用户确认收货
+已发货 --> 已完成 : 超时自动确认收货
+已发货 --> 售后中 : 申请退货退款
+
+售后中 --> 已完成 : 售后完结
+售后中 --> 已退款 : 退货退款成功
+
+退款中 --> 已退款 : 退款成功
+退款中 --> 已发货 : 商家驳回退款
+
+已关闭 --> [*]
+已完成 --> [*]
+已退款 --> [*]
+
+state 已支付 {
+  [*] --> 待分单
+  待分单 --> 已分单 : 分配发货仓
+  已分单 --> [*]
+}
+@enduml

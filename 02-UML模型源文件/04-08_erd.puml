@@ -1,0 +1,252 @@
+' 文件：04-08_erd.puml
+' 图号：图 4-8  核心数据模型图
+' 章节：4.6 数据设计
+' 说明：给出核心数据库表结构及主外键关联，支撑品类自定义与 AI 能力的数据落地。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-8  核心数据模型图
+
+hide circle
+skinparam linetype ortho
+
+class t_category <<品类表>> {
+  category_id : bigint <<PK>>
+  code : varchar(64) <<UK>>
+  name : varchar(128)
+  parent_id : bigint <<FK>>
+  level : tinyint
+  path : varchar(512)
+  is_leaf : tinyint
+  version : int
+  status : tinyint
+}
+
+class t_category_attr <<品类属性表>> {
+  attr_id : bigint <<PK>>
+  category_id : bigint <<FK>>
+  attr_code : varchar(64)
+  attr_name : varchar(128)
+  data_type : varchar(32)
+  is_required : tinyint
+  is_filterable : tinyint
+  value_range : varchar(1024)
+  sort_no : int
+}
+
+class t_index_mapping <<索引映射表>> {
+  mapping_id : bigint <<PK>>
+  category_id : bigint <<FK>>
+  index_name : varchar(128)
+  field_json : json
+  sync_status : tinyint
+}
+
+class t_product <<商品表>> {
+  product_id : bigint <<PK>>
+  merchant_id : bigint <<FK>>
+  category_id : bigint <<FK>>
+  title : varchar(256)
+  main_image : varchar(512)
+  status : tinyint
+  created_at : datetime
+}
+
+class t_sku <<SKU 表>> {
+  sku_id : bigint <<PK>>
+  product_id : bigint <<FK>>
+  spec_text : varchar(512)
+  sale_price : decimal(12,2)
+  market_price : decimal(12,2)
+  status : tinyint
+}
+
+class t_sku_attr_value <<SKU 属性值表>> {
+  value_id : bigint <<PK>>
+  sku_id : bigint <<FK>>
+  attr_id : bigint <<FK>>
+  attr_value : varchar(256)
+}
+
+class t_inventory <<库存表>> {
+  stock_id : bigint <<PK>>
+  sku_id : bigint <<FK>>
+  warehouse_id : bigint
+  total_qty : int
+  locked_qty : int
+  version : int
+}
+
+class t_user <<用户表>> {
+  user_id : bigint <<PK>>
+  nickname : varchar(64)
+  mobile : varchar(20) <<UK>>
+  member_level : int
+  created_at : datetime
+}
+
+class t_user_profile <<用户画像表>> {
+  profile_id : bigint <<PK>>
+  user_id : bigint <<FK>>
+  prefer_category_json : json
+  price_band : varchar(32)
+  activity_score : decimal(6,2)
+  updated_at : datetime
+}
+
+class t_user_behavior <<用户行为表>> {
+  event_id : bigint <<PK>>
+  user_id : bigint <<FK>>
+  event_type : varchar(32)
+  sku_id : bigint
+  scene : varchar(32)
+  occur_time : datetime
+}
+
+class t_order <<订单表>> {
+  order_id : bigint <<PK>>
+  order_no : varchar(32) <<UK>>
+  user_id : bigint <<FK>>
+  total_amount : decimal(12,2)
+  pay_amount : decimal(12,2)
+  status : tinyint
+  created_at : datetime
+}
+
+class t_order_item <<订单明细表>> {
+  order_item_id : bigint <<PK>>
+  order_id : bigint <<FK>>
+  sku_id : bigint <<FK>>
+  quantity : int
+  unit_price : decimal(12,2)
+  source : varchar(32)
+}
+
+class t_payment <<支付单表>> {
+  payment_id : bigint <<PK>>
+  order_id : bigint <<FK>>
+  channel : varchar(32)
+  pay_status : tinyint
+  trade_no : varchar(64)
+  paid_at : datetime
+}
+
+class t_conversation <<会话表>> {
+  session_id : varchar(64) <<PK>>
+  user_id : bigint <<FK>>
+  channel : varchar(32)
+  status : tinyint
+  started_at : datetime
+}
+
+class t_message <<消息表>> {
+  message_id : bigint <<PK>>
+  session_id : varchar(64) <<FK>>
+  role : varchar(16)
+  content : text
+  confidence : decimal(5,4)
+}
+
+class t_knowledge_chunk <<知识片段表>> {
+  chunk_id : bigint <<PK>>
+  category_code : varchar(64)
+  content : text
+  embedding_id : varchar(128)
+  status : tinyint
+}
+
+class t_bundle <<组货方案表>> {
+  bundle_id : bigint <<PK>>
+  main_product_id : bigint <<FK>>
+  scene_tag : varchar(64)
+  bundle_price : decimal(12,2)
+  gross_rate : decimal(6,4)
+  strategy_code : varchar(64)
+}
+
+class t_bundle_item <<组货明细表>> {
+  bundle_item_id : bigint <<PK>>
+  bundle_id : bigint <<FK>>
+  sku_id : bigint <<FK>>
+  role : varchar(32)
+  quantity : int
+}
+
+class t_recommend_log <<推荐日志表>> {
+  log_id : bigint <<PK>>
+  user_id : bigint <<FK>>
+  scene : varchar(32)
+  strategy_code : varchar(64)
+  items_json : json
+  trace_id : varchar(64)
+}
+
+t_category "1" -- "0..*" t_category : 父子
+t_category "1" -- "0..*" t_category_attr : 定义
+t_category "1" -- "0..1" t_index_mapping : 生成
+t_category "1" -- "0..*" t_product : 归类
+t_product "1" -- "1..*" t_sku : 包含
+t_sku "1" -- "0..*" t_sku_attr_value : 具备
+t_sku "1" -- "1" t_inventory : 库存
+
+t_user "1" -- "1" t_user_profile : 拥有
+t_user "1" -- "0..*" t_user_behavior : 产生
+t_user "1" -- "0..*" t_order : 下单
+t_user "1" -- "0..*" t_conversation : 会话
+t_user "1" -- "0..*" t_recommend_log : 推荐
+
+t_order "1" -- "1..*" t_order_item : 包含
+t_order "1" -- "1" t_payment : 支付
+t_order_item "0..*" -- "1" t_sku : 引用
+
+t_conversation "1" -- "1..*" t_message : 包含
+t_knowledge_chunk "0..*" .. "0..*" t_message : RAG 引用
+
+t_bundle "1" -- "2..*" t_bundle_item : 包含
+t_bundle_item "0..*" -- "1" t_sku : 引用
+t_bundle "0..*" -- "1" t_product : 主商品
+@enduml

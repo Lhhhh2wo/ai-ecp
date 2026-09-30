@@ -1,0 +1,105 @@
+' 文件：04-12_seq_selection.puml
+' 图号：图 4-12  智能选品推荐时序图
+' 章节：4.5 动态行为设计
+' 说明：描述个性化选品从画像装载、多路召回、精排打分、业务规则过滤到结果返回与埋点回流的过程。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 4-12  智能选品推荐时序图
+
+actor "消费者" as U
+participant "商城前端" as FE
+participant "智能选品服务" as RS
+participant "画像服务" as PR
+participant "召回引擎" as REC
+participant "排序引擎" as RANK
+participant "业务规则引擎" as RULE
+participant "商品服务" as PS
+participant "埋点服务" as TR
+
+U -> FE : 进入首页 / 商品详情页
+FE -> RS : recommend(userId, scene, pageContext)
+activate RS
+
+RS -> PR : getUserProfile(userId)
+activate PR
+PR --> RS : 画像(偏好品类 / 价格带 / 活跃度)
+deactivate PR
+
+group 多路并行召回
+  RS -> REC : 协同过滤召回
+  RS -> REC : 向量语义召回
+  RS -> REC : 热门与新品召回
+end
+REC --> RS : 合并去重后的候选集(约 500 条)
+
+RS -> RANK : rank(candidates, profile, context)
+activate RANK
+RANK -> RANK : 交叉特征构建 + 精排模型打分
+RANK --> RS : 打分排序结果(约 100 条)
+deactivate RANK
+
+RS -> RULE : applyRules(candidates)
+activate RULE
+RULE -> PS : 校验库存 / 价格 / 上下架状态
+PS --> RULE : 可售性结果
+RULE -> RULE : 过滤 + 多样性重排(品类打散)
+RULE --> RS : 最终候选结果
+deactivate RULE
+
+alt 结果条数达到阈值
+  RS --> FE : 推荐列表 TopN
+else 结果不足(冷启动用户)
+  RS --> FE : 热门榜 / 新客专享兜底列表
+end
+
+FE --> U : 渲染推荐位与推荐理由
+U -> FE : 点击 / 加购
+FE -> TR : 上报曝光与点击埋点
+TR -> PR : 实时更新画像
+deactivate RS
+@enduml

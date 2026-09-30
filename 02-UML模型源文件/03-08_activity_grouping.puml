@@ -1,0 +1,96 @@
+' 文件：03-08_activity_grouping.puml
+' 图号：图 3-8  智能组货搭配活动图
+' 章节：3.4 关键业务流程分析
+' 说明：描述「场景识别 → 配套召回 → 可行性校验 → 组合定价 → 方案生成」的智能组货流程。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 3-8  智能组货搭配活动图
+
+start
+
+:接收组货请求(主商品 / 场景 / 用户);
+
+partition "场景识别" {
+  :识别搭配场景(如露营新手套装、办公桌面升级);
+  :抽取场景约束(预算区间、人数、季节);
+}
+
+partition "配套召回" {
+  :关联规则挖掘(同购 / 同浏览);
+  :品类知识图谱补全配套关系;
+  :大模型生成语义搭配建议;
+  :合并去重得到配套候选 SKU;
+}
+
+partition "可行性校验" {
+  :校验库存与可售状态;
+  :校验物流可送达与时效;
+  :校验上下架与限购规则;
+  if (是否存在可行组合?) then (否)
+    :降级为单品推荐;
+    :返回单品类候选;
+    stop
+  else (是)
+    :保留可行 SKU 集合;
+  endif
+}
+
+partition "组合定价与方案生成" {
+  :计算组合价、满减与优惠券叠加;
+  :测算组合毛利率与合规性;
+  :按转化率与毛利加权排序;
+  :生成主推方案与备选方案;
+  :调用大模型生成搭配理由文案;
+}
+
+:前端展示搭配图与组合优惠;
+:用户一键加购组合商品;
+:记录组货效果埋点;
+
+stop
+@enduml

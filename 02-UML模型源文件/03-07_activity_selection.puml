@@ -1,0 +1,104 @@
+' 文件：03-07_activity_selection.puml
+' 图号：图 3-7  智能选品推荐活动图
+' 章节：3.4 关键业务流程分析
+' 说明：描述「画像 → 召回 → 排序 → 规则过滤 → 重排 → 兜底」的智能选品推荐决策链路。
+' 系统：智选云 AI 电商在线售货系统 (AI-ECP (AI E-Commerce Platform))  V1.0
+
+@startuml
+' ===================================================================
+'  智选云 AI 电商在线售货系统 (AI-ECP)  —  UML 图源文件
+'  风格：严格 UML 2.x / uml-diagrams.org 参考风格（黑白单色）
+'  渲染：java -jar plantuml.jar -charset UTF-8 -tsvg <本文件>
+' ===================================================================
+skinparam monochrome true
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Microsoft YaHei"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam roundCorner 0
+skinparam nodesep 45
+skinparam ranksep 55
+skinparam packageStyle rectangle
+skinparam sequenceMessageAlign center
+skinparam ActorBackgroundColor #FFFFFF
+skinparam ActorBorderColor #000000
+skinparam ParticipantBackgroundColor #FFFFFF
+skinparam ParticipantBorderColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam SequenceGroupBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #000000
+skinparam SequenceBoxBackgroundColor #FFFFFF
+skinparam SequenceBoxBorderColor #000000
+skinparam PackageBackgroundColor #FFFFFF
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ObjectBackgroundColor #FFFFFF
+skinparam StateBackgroundColor #FFFFFF
+skinparam UsecaseBackgroundColor #FFFFFF
+skinparam ComponentBackgroundColor #FFFFFF
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam NodeBackgroundColor #FFFFFF
+skinparam DatabaseBackgroundColor #FFFFFF
+skinparam ArrowColor #000000
+skinparam ArrowThickness 0.8
+skinparam DefaultTextColor #000000
+skinparam SequenceLifeLineBorderColor #000000
+skinparam SequenceLifeLineBackgroundColor #FFFFFF
+skinparam SequenceActivationBackgroundColor #FFFFFF
+skinparam SequenceActivationBorderColor #000000
+skinparam SequenceArrowColor #000000
+title 图 3-7  智能选品推荐活动图
+
+start
+
+:接收推荐请求(用户、场景、页面上下文);
+
+partition "画像构建" {
+  :装载长期画像(偏好品类/品牌/价格带);
+  :融合实时行为序列;
+  if (画像是否充分?) then (否)
+    :标记为冷启动用户;
+  else (是)
+    :输出个性化画像向量;
+  endif
+}
+
+partition "多路召回" {
+  fork
+    :协同过滤召回;
+  fork again
+    :向量语义召回;
+  fork again
+    :热门与新品召回;
+  fork again
+    :图文搜索召回;
+  end fork
+  :合并去重得到候选集;
+}
+
+partition "排序与重排" {
+  :特征工程(用户/商品/上下文交叉特征);
+  :精排模型打分;
+  :业务规则过滤(下架/无库存/合规/限购);
+  :多样性重排(品类打散、防同质化);
+}
+
+if (结果条数是否达到阈值?) then (否)
+  :启用热门 / 新客专享兜底列表;
+else (是)
+  :输出 TopN 推荐结果;
+endif
+
+:返回推荐列表与推荐理由;
+:记录曝光埋点;
+
+partition "闭环反馈" {
+  :采集点击 / 加购 / 成交行为;
+  :回流至样本库;
+  :周期性更新画像与排序模型;
+}
+
+stop
+@enduml
