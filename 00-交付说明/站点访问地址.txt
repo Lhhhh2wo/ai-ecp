@@ -1,5 +1,5 @@
 智选云 AI 电商在线售货系统 —— 成果站点访问地址
 ====================================================
-电脑浏览器访问：https://ai-ecp-uml-design.app.workbuddy.host/
+电脑浏览器访问：https://lhhhh2wo.github.io/ai-ecp/
 手机访问：使用相机 / 微信「扫一扫」扫描二维码图片
-二维码图片：website/assets/qrcode.png
+二维码图片：assets/qrcode.png

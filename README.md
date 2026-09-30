@@ -4,7 +4,7 @@
 
 本仓库为「智选云 AI 电商在线售货系统」的完整成果包，包含可离线浏览的成果站点、两份正式报告、22 幅 UML 图（源文件 + SVG/PNG 渲染图）以及站点构建工具脚本。
 
-**在线访问（GitHub Pages）**：`https://<你的用户名>.github.io/ai-ecp/`（推送后自动生效）
+**在线访问（GitHub Pages）**：<https://lhhhh2wo.github.io/ai-ecp/>
 
 ## 系统简介
 
